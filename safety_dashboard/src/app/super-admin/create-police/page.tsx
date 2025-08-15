@@ -2,7 +2,6 @@
 import { useAuthStore } from '@/store';
 
 import React, { useState } from 'react';
-// ...existing code...
 import { useRouter } from 'next/navigation';
 import AppSidebar from '@/layout/AppSidebar';
 import AppHeader from '@/layout/AppHeader';

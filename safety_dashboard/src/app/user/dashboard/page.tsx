@@ -1,5 +1,6 @@
-import { useAuthStore } from '@/store';
+
 "use client";
+import { useAuthStore } from '@/store';
 
 import React, { useState, useEffect } from 'react';
 // ...existing code...

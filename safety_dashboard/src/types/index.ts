@@ -230,6 +230,7 @@ export interface Theme {
 }
 
 // State management types (for Zustand stores)
+// types/index.ts (or wherever your types are defined)
 export interface AuthState {
   user: User | null;
   access_token: string | null;
@@ -237,10 +238,14 @@ export interface AuthState {
   isAuthenticated: boolean;
   isLoading: boolean;
   error: string | null;
+  
+  // Actions
   login: (email: string, password: string) => Promise<void>;
   register: (data: RegisterData) => Promise<void>;
   logout: () => void;
   getCurrentUser: () => Promise<void>;
+  initializeAuth: () => Promise<void>; // New method
+  setLoading: (loading: boolean) => void; // New method
   clearError: () => void;
 }
 
@@ -266,7 +271,7 @@ export interface TicketState {
   isLoading: boolean;
   error: string | null;
   fetchTickets: (filters?: TicketFilters) => Promise<void>;
-  createTicket: (data: CreateTicketForm) => Promise<void>;
+  createTicket: (data: CreateTicketForm) => Promise<Ticket>;
   updateTicket: (id: string, data: UpdateTicketForm) => Promise<void>;
   deleteTicket: (id: string) => Promise<void>;
   setSelectedTicket: (ticket: Ticket | null) => void;

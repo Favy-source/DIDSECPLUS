@@ -2,7 +2,6 @@ import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuthStore } from '@/store';
-// ...existing code...
 
 interface NavItem {
   name: string;
@@ -98,6 +97,12 @@ export default function Sidebar() {
 // Header component for the main content area
 
 export function Header({ title, subtitle }: { title: string; subtitle?: string }) {
+  const pathname = usePathname();
+  // Only show the compact user profile header when on the Users page
+  if (!pathname?.startsWith('/dashboard/users')) {
+    return null;
+  }
+
   const user = useAuthStore((state) => state.user);
   const logout = useAuthStore((state) => state.logout);
 
@@ -109,7 +114,7 @@ export function Header({ title, subtitle }: { title: string; subtitle?: string }
       case 'user': return 'Citizen';
       default: return 'User';
     }
-  } 
+  };
 
   const handleLogout = async () => {
     try {
@@ -117,56 +122,25 @@ export function Header({ title, subtitle }: { title: string; subtitle?: string }
     } catch (error) {
       console.error('Logout failed:', error);
     }
-  } 
+  };
 
   return (
     <div className="bg-white shadow-sm border-b border-gray-200">
-      <div className="px-6 py-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">{title}</h1>
-            {subtitle && (
-              <p className="mt-1 text-sm text-gray-600">{subtitle}</p>
-            )}
+      <div className="px-6 py-3 flex items-center justify-end">
+        {/* Only show the user profile box here */}
+        {user && (
+          <div className="flex items-center space-x-3">
+            <div className="text-right">
+              <p className="text-sm font-medium text-gray-900">{user.name}</p>
+              <p className="text-xs text-gray-500">{getRoleDisplayName(user.role)}</p>
+            </div>
+            <div className="w-8 h-8 bg-green-600 rounded-full flex items-center justify-center">
+              <span className="text-white text-sm font-medium">
+                {user.name?.split(' ').map((n) => n[0]).join('').slice(0,2)}
+              </span>
+            </div>
           </div>
-          
-          <div className="flex items-center space-x-4">
-            {/* User Profile */}
-            {user && (
-              <div className="flex items-center space-x-3">
-                <div className="text-right">
-                  <p className="text-sm font-medium text-gray-900">
-            {user.name}
-                  </p>
-                  <p className="text-xs text-gray-500">
-                    {getRoleDisplayName(user.role)}
-                  </p>
-                </div>
-                <div className="w-8 h-8 bg-green-600 rounded-full flex items-center justify-center">
-            <span className="text-white text-sm font-medium">
-              {user.name?.split(' ').map((n) => n[0]).join('').slice(0,2)}
-            </span>
-                </div>
-              </div>
-            )}
-            
-            {/* Notification Bell */}
-            <button className="relative p-2 text-gray-400 hover:text-gray-500">
-              <span className="sr-only">View notifications</span>
-              <span className="text-xl">🔔</span>
-              <span className="absolute top-0 right-0 block h-2 w-2 rounded-full bg-red-400 ring-2 ring-white"></span>
-            </button>
-
-            {/* Logout Button */}
-            <button 
-              onClick={handleLogout}
-              className="p-2 text-gray-400 hover:text-gray-500"
-              title="Logout"
-            >
-              <span className="text-xl">🚪</span>
-            </button>
-          </div>
-        </div>
+        )}
       </div>
     </div>
   );

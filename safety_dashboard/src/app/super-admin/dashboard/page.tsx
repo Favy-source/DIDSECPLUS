@@ -119,7 +119,7 @@ const SuperAdminDashboard: React.FC = () => {
         {/* Header */}
         <AppHeader />
         
-          {/* Dashboard Content - TailAdmin Style */}
+          {/* Dashboard Content - DIDSECPLUS Style */}
           <main className="p-4 md:p-6 2xl:p-10">
             {/* Welcome Header */}
             <div className="mb-6">
@@ -131,7 +131,7 @@ const SuperAdminDashboard: React.FC = () => {
               </p>
             </div>
 
-            {/* Key Statistics Cards - TailAdmin Style */}
+            {/* Key Statistics Cards - DIDSECPLUS Style */}
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-6 xl:grid-cols-4 2xl:gap-7.5 mb-6">
               {/* Total Users Card */}
               <div className="rounded-sm border border-stroke bg-white px-7.5 py-6 shadow-default dark:border-strokedark dark:bg-boxdark">

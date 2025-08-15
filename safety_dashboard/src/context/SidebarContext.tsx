@@ -5,6 +5,7 @@ type SidebarContextType = {
   isExpanded: boolean;
   isMobileOpen: boolean;
   isHovered: boolean;
+  hideOnCollapse: boolean;
   activeItem: string | null;
   openSubmenu: string | null;
   toggleSidebar: () => void;
@@ -31,6 +32,7 @@ export const SidebarProvider: React.FC<{ children: React.ReactNode }> = ({
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
+  const [hideOnCollapse, setHideOnCollapse] = useState(false);
   const [activeItem, setActiveItem] = useState<string | null>(null);
   const [openSubmenu, setOpenSubmenu] = useState<string | null>(null);
 
@@ -52,7 +54,14 @@ export const SidebarProvider: React.FC<{ children: React.ReactNode }> = ({
   }, []);
 
   const toggleSidebar = () => {
-    setIsExpanded((prev) => !prev);
+    setIsExpanded((prev) => {
+      const next = !prev;
+      // if collapsing via hamburger on desktop, mark to hide completely (no hover)
+      setHideOnCollapse(!next ? true : false);
+      // when expanding, reset hovered state
+      if (next) setIsHovered(false);
+      return next;
+    });
   };
 
   const toggleMobileSidebar = () => {
@@ -69,6 +78,7 @@ export const SidebarProvider: React.FC<{ children: React.ReactNode }> = ({
         isExpanded: isMobile ? false : isExpanded,
         isMobileOpen,
         isHovered,
+        hideOnCollapse,
         activeItem,
         openSubmenu,
         toggleSidebar,

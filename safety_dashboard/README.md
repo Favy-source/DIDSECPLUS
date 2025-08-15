@@ -1,173 +1,85 @@
-# TailAdmin Next.js - Free Next.js Tailwind Admin Dashboard Template
+# DIDSECPLUS — Safety Dashboard (local fork)
 
-TailAdmin is a free and open-source admin dashboard template built on **Next.js and Tailwind CSS** providing developers with everything they need to create a feature-rich and data-driven: back-end, dashboard, or admin panel solution for any sort of web project.
+This README documents the safety_dashboard application contained in this workspace — a Next.js + TypeScript admin dashboard customized for local development and demonstration. It describes what is implemented here, how to run it, and where to find the code you will likely edit.
 
-![TailAdmin - Next.js Dashboard Preview](./banner.png)
+Status: developer/demo build
+- Many admin features are implemented using mock data under `src/data/` for quick iteration.
+- Client-only mapping and charting components are used (Leaflet / react-leaflet, ApexCharts).
+- Some runtime-only libraries are imported dynamically to avoid SSR issues.
 
-With TailAdmin Next.js, you get access to all the necessary dashboard UI components, elements, and pages required to build a high-quality and complete dashboard or admin panel. Whether you're building a dashboard or admin panel for a complex web application or a simple website. 
+Quick links
+- App root: `safety_dashboard/`
+- Sidebar component: `src/layout/AppSidebar.tsx`
+- Header: `src/layout/AppHeader.tsx`
+- Mock data: `src/data/mockAlerts.ts`, `src/data/mockTickets.ts`, `src/data/mockUsers.ts`
+- Users pages: `src/app/super-admin/users/*`
+- Location pages: `src/app/super-admin/location/*`
+- LGA client component: `src/components/location/LgaChoroplethClient.tsx`
+- Security map client: `src/components/location/SecurityMapClient.tsx`
 
-TailAdmin utilizes the powerful features of **Next.js 15** and common features of Next.js such as server-side rendering (SSR), static site generation (SSG), and seamless API route integration. Combined with the advancements of **React 19** and the robustness of **TypeScript**, TailAdmin is the perfect solution to help get your project up and running quickly.
+What this fork contains (high level)
+- Sidebar / header chrome that can be collapsed; when collapsed a CSS variable `--sidebar-width` is emitted so the main content can offset itself.
+- Alerts and Tickets pages under `/super-admin/*` wired to mock data.
+- Users management pages (All Users, User Roles, User Analytics): search, pagination, create-user modal, details drawer, analytics dashboards.
+- Location modules: client-only Leaflet map and LGA choropleth using Turf for robust geometry operations.
+- CSV export helpers and simple client-side persistence (localStorage) for demo data.
 
-## Overview
+Important pages (dev URLs)
+- All Users — http://localhost:3000/super-admin/users/allusers
+- User Roles — http://localhost:3000/super-admin/users/userroles
+- User Analytics — http://localhost:3000/super-admin/users/useranalytics
+- State Analysis — http://localhost:3000/super-admin/location/state-analysis
+- Security Map — http://localhost:3000/super-admin/location/securitymap
 
-TailAdmin provides essential UI components and layouts for building feature-rich, data-driven admin dashboards and control panels. It's built on:
+Required packages (install before running)
+This project relies on a few browser-only and chart/map libraries which must be installed:
 
-- Next.js 15.x
-- React 19
-- TypeScript
-- Tailwind CSS V4
+- @turf/turf — geometry operations for choropleth and point-in-polygon
+- leaflet, react-leaflet — mapping
+- leaflet.markercluster — clustering (dynamically imported at runtime)
+- apexcharts, react-apexcharts — charts (sparklines, area/line/donut)
 
-### Quick Links
-- [✨ Visit Website](https://tailadmin.com)
-- [📄 Documentation](https://tailadmin.com/docs)
-- [⬇️ Download](https://tailadmin.com/download)
-- [🖌️ Figma Design File (Community Edition)](https://www.figma.com/community/file/1463141366275764364)
-- [⚡ Get PRO Version](https://tailadmin.com/pricing)
-
-### Demos
-- [Free Version](https://nextjs-free-demo.tailadmin.com)
-- [Pro Version](https://nextjs-demo.tailadmin.com)
-
-### Other Versions
-- [HTML Version](https://github.com/TailAdmin/tailadmin-free-tailwind-dashboard-template)
-- [React Version](https://github.com/TailAdmin/free-react-tailwind-admin-dashboard)
-- [Vue.js Version](https://github.com/TailAdmin/vue-tailwind-admin-dashboard)
-
-## Installation
-
-### Prerequisites
-To get started with TailAdmin, ensure you have the following prerequisites installed and set up:
-
-- Node.js 18.x or later (recommended to use Node.js 20.x or later)
-
-### Cloning the Repository
-Clone the repository using the following command:
+Install (npm):
 
 ```bash
-git clone https://github.com/TailAdmin/free-nextjs-admin-dashboard.git
+cd safety_dashboard
+npm install @turf/turf leaflet react-leaflet leaflet.markercluster apexcharts react-apexcharts
+# optionally install types for dev
+npm install -D @types/leaflet @types/leaflet.markercluster
 ```
 
-> Windows Users: place the repository near the root of your drive if you face issues while cloning.
+If you modified package.json already, run `npm install` to sync node_modules.
 
-1. Install dependencies:
-    ```bash
-    npm install
-    # or
-    yarn install
-    ```
-    > Use `--legacy-peer-deps` flag if you face peer-dependency error during installation.
+Run the dev server
 
-2. Start the development server:
-    ```bash
-    npm run dev
-    # or
-    yarn dev
-    ```
+```bash
+cd safety_dashboard
+npm run dev
+# open http://localhost:3000/super-admin/users/allusers
+```
 
-## Components
+Developer tips and gotchas
+- Client-only libraries: Leaflet and some marker cluster plugins are browser-only. Map components live in client components (look for files that import from `react-leaflet` and use `dynamic` imports). Do not import these from server components.
+- If you see "Cannot find module '@turf/turf'" or similar — stop the dev server, install the package, then restart.
+- Sidebar overlay: the sidebar exposes `--sidebar-width` to offset main content. Use `margin-left: var(--sidebar-width)` (already used on the example pages) or adjust your layout so the sidebar isn't visually covered by maps/content.
+- Local persistence: the Users list is persisted to `localStorage` (key: `mockUsers`) for convenient testing. Clear localStorage if you want to reset to the shipped mock dataset.
+- Charts: the analytics page uses dynamic import for `react-apexcharts` (client-only). If charts don't appear, make sure dependencies are installed and the page is rendering on the client.
 
-TailAdmin is a pre-designed starting point for building a web-based dashboard using Next.js and Tailwind CSS. The template includes:
+Mock data
+- `src/data/mockAlerts.ts` — demo alerts used in map and alerts pages
+- `src/data/mockTickets.ts` — demo tickets; tickets link to alerts where appropriate
+- `src/data/mockUsers.ts` — demo users used by the Users pages and analytics
 
-- Sophisticated and accessible sidebar
-- Data visualization components
-- Profile management and custom 404 page
-- Tables and Charts(Line and Bar)
-- Authentication forms and input elements
-- Alerts, Dropdowns, Modals, Buttons and more
-- Can't forget Dark Mode 🕶️
+Where to change behavior
+- Sidebar collapse behavior: `src/layout/AppSidebar.tsx` and `src/context/SidebarContext.tsx`
+- Map & LGA logic: `src/components/location/SecurityMapClient.tsx` and `src/components/location/LgaChoroplethClient.tsx` (uses Turf for geometry checks)
+- Users UI: `src/app/super-admin/users/*` (list, roles, analytics)
+- Mock dataset: edit or extend files in `src/data/` to change sample records.
 
-All components are built with React and styled using Tailwind CSS for easy customization.
+Recommended next improvements
+- Replace mock data with a small JSON API (or Next.js API routes) to simulate server-side interactions.
+- Add tests for critical UI flows (create user, detail drawer, map interactions).
+- Improve accessibility of modal/drawer (focus trap, ARIA) for production readiness.
 
-## Feature Comparison
-
-### Free Version
-- 1 Unique Dashboard
-- 30+ dashboard components
-- 50+ UI elements
-- Basic Figma design files
-- Community support
-
-### Pro Version
-- 5 Unique Dashboards: Analytics, Ecommerce, Marketing, CRM, Stocks (more coming soon)
-- 400+ dashboard components and UI elements
-- Complete Figma design file
-- Email support
-
-To learn more about pro version features and pricing, visit our [pricing page](https://tailadmin.com/pricing).
-
-## Changelog
-
-### Version 2.0.2 - [March 25, 2025]
-
-- Upgraded to Next v15.2.3 for [CVE-2025-29927](https://nextjs.org/blog/cve-2025-29927) concerns
-- Included overrides vectormap for packages to prevent peer dependency errors during installation.
-- Migrated from react-flatpickr to flatpickr package for React 19 support
-
-### Version 2.0.1 - [February 27, 2025]
-
-#### Update Overview
-
-- Upgraded to Tailwind CSS v4 for better performance and efficiency.
-- Updated class usage to match the latest syntax and features.
-- Replaced deprecated class and optimized styles.
-
-#### Next Steps
-
-- Run npm install or yarn install to update dependencies.
-- Check for any style changes or compatibility issues.
-- Refer to the Tailwind CSS v4 [Migration Guide](https://tailwindcss.com/docs/upgrade-guide) on this release. if needed.
-- This update keeps the project up to date with the latest Tailwind improvements. 🚀
-
-### v2.0.0 (February 2025)
-A major update focused on Next.js 15 implementation and comprehensive redesign.
-
-#### Major Improvements
-- Complete redesign using Next.js 15 App Router and React Server Components
-- Enhanced user interface with Next.js-optimized components
-- Improved responsiveness and accessibility
-- New features including collapsible sidebar, chat screens, and calendar
-- Redesigned authentication using Next.js App Router and server actions
-- Updated data visualization using ApexCharts for React
-
-#### Breaking Changes
-
-- Migrated from Next.js 14 to Next.js 15
-- Chart components now use ApexCharts for React
-- Authentication flow updated to use Server Actions and middleware
-
-[Read more](https://tailadmin.com/docs/update-logs/nextjs) on this release.
-
-#### Breaking Changes
-- Migrated from Next.js 14 to Next.js 15
-- Chart components now use ApexCharts for React
-- Authentication flow updated to use Server Actions and middleware
-
-### v1.3.4 (July 01, 2024)
-- Fixed JSvectormap rendering issues
-
-### v1.3.3 (June 20, 2024)
-- Fixed build error related to Loader component
-
-### v1.3.2 (June 19, 2024)
-- Added ClickOutside component for dropdown menus
-- Refactored sidebar components
-- Updated Jsvectormap package
-
-### v1.3.1 (Feb 12, 2024)
-- Fixed layout naming consistency
-- Updated styles
-
-### v1.3.0 (Feb 05, 2024)
-- Upgraded to Next.js 14
-- Added Flatpickr integration
-- Improved form elements
-- Enhanced multiselect functionality
-- Added default layout component
-
-## License
-
-TailAdmin Next.js Free Version is released under the MIT License.
-
-## Support
-
-If you find this project helpful, please consider giving it a star on GitHub. Your support helps us continue developing and maintaining this template.
+Contact / notes
+- This fork has focused changes for local demo and development. If you want me to wire persistent storage, API endpoints, or convert forms to Server Actions, tell me which feature to implement next.

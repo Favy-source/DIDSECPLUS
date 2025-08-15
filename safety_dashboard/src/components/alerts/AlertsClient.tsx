@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { AlertTriangle, MapPin, Clock, User, Phone, CheckCircle, XCircle } from 'lucide-react';
+import DateTimeClient from '@/components/common/DateTimeClient';
 
 interface Alert {
   id: string;
@@ -181,7 +182,7 @@ export default function AlertsClient() {
                     <div className="flex flex-wrap items-center gap-4 text-sm text-gray-500 dark:text-gray-400">
                       <div className="flex items-center">
                         <Clock className="h-4 w-4 mr-1" />
-                        {new Date(alert.created_at).toLocaleString()}
+                        <DateTimeClient iso={alert.created_at} />
                       </div>
                       
                       {alert.latitude && alert.longitude && (

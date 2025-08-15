@@ -119,8 +119,17 @@ export function useWebSocket(url: string, options: UseWebSocketOptions = {}) {
 
         ws.onerror = (error) => {
           if (!mounted) return;
-          console.error('WebSocket error:', error);
-          onError?.(error);
+          // ErrorEvent may not serialize well in console; extract useful fields
+          const errInfo = (error as any) || {};
+          const errMsg = errInfo.message || errInfo.type || 'WebSocket error event';
+          console.error('WebSocket error:', { url, message: errMsg, event: errInfo });
+
+          // Defensive: ensure state reflects disconnected socket
+          try { if (ws) { ws.close(); } } catch (e) { /* ignore */ }
+          setIsConnected(false);
+          setSocket(null);
+
+          onError?.(error as Event);
         };
 
         if (mounted) {
@@ -172,48 +181,72 @@ export function useSecurityAlerts() {
     ? `${process.env.NEXT_PUBLIC_BACKEND_URL.replace('http', 'ws')}/api/ws`
     : 'ws://localhost:3000/api/ws';
 
-  const { isConnected, lastMessage } = useWebSocket(wsUrl, {
-    onConnect: () => {
-      console.log('🛡️ Connected to SecurityAlert real-time updates');
-    },
-    onMessage: (message) => {
-      switch (message.message_type) {
-        case 'alert_created':
-          if (message.data.alert) {
-            setAlerts(prev => [message.data.alert!, ...prev]);
-            setNotifications(prev => [message, ...prev.slice(0, 9)]); // Keep last 10 notifications
-            
-            // Show browser notification for critical alerts
-            if (message.data.alert.severity === 'critical') {
-              if (Notification.permission === 'granted') {
-                new Notification('🚨 Critical Security Alert', {
-                  body: `New critical alert: ${message.data.alert.title || 'Unnamed alert'}`,
-                  icon: '/favicon.ico'
-                });
-              }
+  // Memoized handlers to avoid changing references on every render which
+  // would retrigger the WebSocket effect and cause a render loop.
+  const handleConnect = useCallback(() => {
+    console.log('🛡️ Connected to SecurityAlert real-time updates');
+  }, []);
+
+  const handleMessage = useCallback((message: WebSocketMessage) => {
+    switch (message.message_type) {
+      case 'alert_created':
+        if (message.data.alert) {
+          setAlerts(prev => [message.data.alert!, ...prev]);
+          setNotifications(prev => [message, ...prev.slice(0, 9)]);
+
+          if (message.data.alert.severity === 'critical') {
+            if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
+              new Notification('🚨 Critical Security Alert', {
+                body: `New critical alert: ${message.data.alert.title || 'Unnamed alert'}`,
+                icon: '/favicon.ico'
+              });
             }
           }
-          break;
-          
-        case 'alert_updated':
-          if (message.data.alert_id && message.data.alert) {
-            setAlerts(prev => prev.map(alert => 
-              alert.id === message.data.alert_id ? { ...alert, ...message.data.alert } : alert
-            ));
-            setNotifications(prev => [message, ...prev.slice(0, 9)]);
-          }
-          break;
-          
-        case 'alert_resolved':
-          if (message.data.alert_id) {
-            setAlerts(prev => prev.map(alert => 
-              alert.id === message.data.alert_id ? { ...alert, status: 'resolved' as const } : alert
-            ));
-            setNotifications(prev => [message, ...prev.slice(0, 9)]);
-          }
-          break;
-      }
+        }
+        break;
+
+      case 'alert_updated':
+        if (message.data.alert_id && message.data.alert) {
+          setAlerts(prev => prev.map(alert => 
+            alert.id === message.data.alert_id ? { ...alert, ...message.data.alert } : alert
+          ));
+          setNotifications(prev => [message, ...prev.slice(0, 9)]);
+        }
+        break;
+
+      case 'alert_resolved':
+        if (message.data.alert_id) {
+          setAlerts(prev => prev.map(alert => 
+            alert.id === message.data.alert_id ? { ...alert, status: 'resolved' as const } : alert
+          ));
+          setNotifications(prev => [message, ...prev.slice(0, 9)]);
+        }
+        break;
+
+      default:
+        break;
     }
+  }, []);
+
+  const handleDisconnect = useCallback(() => {
+    // Optional: add logging or cleanup here
+  }, []);
+
+  const handleError = useCallback((error: any) => {
+    // Log useful info instead of raw empty object
+    try {
+      const msg = (error && (error.message || error.type)) || JSON.stringify(error) || String(error);
+      console.error('WebSocket error (security alerts):', msg, error);
+    } catch (e) {
+      console.error('WebSocket error (security alerts):', error);
+    }
+  }, []);
+
+  const { isConnected, lastMessage } = useWebSocket(wsUrl, {
+    onConnect: handleConnect,
+    onMessage: handleMessage,
+    onDisconnect: handleDisconnect,
+    onError: handleError
   });
 
   // Request notification permission on mount

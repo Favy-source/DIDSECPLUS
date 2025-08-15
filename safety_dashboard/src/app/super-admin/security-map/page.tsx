@@ -1,10 +1,11 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-// ...existing code...
 import { useRouter } from 'next/navigation';
 import AppSidebar from '@/layout/AppSidebar';
 import AppHeader from '@/layout/AppHeader';
+import LocationSecurityMap from '@/components/location/SecurityMap';
+import { Alert } from '@/types';
 
 interface StateData {
   name: string;
@@ -61,6 +62,65 @@ const SecurityMap = () => {
   const router = useRouter();
   const [selectedState, setSelectedState] = useState<StateData | null>(null);
   const [viewMode, setViewMode] = useState<'alerts' | 'status'>('alerts');
+
+  // State centroids (approximate lat, lon for state capitals)
+  const stateCentroids: Record<string, [number, number]> = {
+    Abia: [5.5320, 7.4860],
+    Adamawa: [9.2038, 12.4955],
+    'Akwa Ibom': [5.0333, 7.9333],
+    Anambra: [6.2100, 7.0700],
+    Bauchi: [10.3010, 9.8436],
+    Bayelsa: [4.9266, 6.2647],
+    Benue: [7.7339, 8.5390],
+    Borno: [11.8333, 13.1500],
+    'Cross River': [4.9517, 8.3416],
+    Delta: [6.2150, 6.1167],
+    Ebonyi: [6.3244, 8.1200],
+    Edo: [6.3383, 5.6258],
+    Ekiti: [7.6238, 5.2200],
+    Enugu: [6.4361, 7.4946],
+    Gombe: [10.2896, 11.1719],
+    Imo: [5.4931, 7.0364],
+    Jigawa: [11.7596, 9.3419],
+    Kaduna: [10.5200, 7.4400],
+    Kano: [12.0022, 8.5919],
+    Katsina: [12.9850, 7.6000],
+    Kebbi: [12.4536, 4.1976],
+    Kogi: [7.8028, 6.7339],
+    Kwara: [8.5000, 4.5500],
+    Lagos: [6.5244, 3.3792],
+    Nasarawa: [8.4876, 8.5244],
+    Niger: [9.6145, 6.5150],
+    Ogun: [7.1600, 3.3464],
+    Ondo: [7.2500, 5.1950],
+    Osun: [7.7667, 4.5667],
+    Oyo: [7.3775, 3.9470],
+    Plateau: [9.8965, 8.8583],
+    Rivers: [4.8156, 7.0498],
+    Sokoto: [13.0059, 5.2474],
+    Taraba: [8.8930, 11.3572],
+    Yobe: [11.7471, 11.9666],
+    Zamfara: [12.1624, 6.6661],
+  };
+
+  // Derive alerts from state data to display on the map
+  const alertsFromStates: Alert[] = nigerianStates.map((s) => {
+    const centroid = stateCentroids[s.name] || [9.0, 7.5];
+    const severity = s.status === 'critical' ? 'critical' : s.status === 'high' ? 'high' : s.status === 'moderate' ? 'medium' : 'low';
+    return {
+      id: s.code,
+      title: `${s.name} - ${s.alerts} alerts`,
+      description: `Estimated ${s.alerts} active alerts in ${s.name}`,
+      severity: severity as any,
+      category: 'other',
+      latitude: centroid[0],
+      longitude: centroid[1],
+      location: `${s.name}, Nigeria`,
+      status: 'active',
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    } as Alert;
+  });
 
   useEffect(() => {
     if (!isLoading && (!user || user.role !== 'super_admin')) {
@@ -159,6 +219,19 @@ const SecurityMap = () => {
                     State Security Status
                   </h3>
                   
+                  {/* Map - show derived alerts for Nigerian states */}
+                  <div className="mb-6">
+                    <LocationSecurityMap
+                      alerts={alertsFromStates}
+                      onAlertClick={(a) => {
+                        const st = nigerianStates.find(s => s.code === a.id);
+                        if (st) setSelectedState(st);
+                      }}
+                      height="600px"
+                      zoom={6}
+                    />
+                  </div>
+
                   <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-3">
                     {nigerianStates.map((state) => (
                       <button
