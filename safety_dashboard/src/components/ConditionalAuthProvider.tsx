@@ -1,14 +1,14 @@
+// src/components/ConditionalAuthProvider.tsx
 "use client";
 
 import React from 'react';
-import { usePathname } from 'next/navigation';
-// ...existing code...
+import AuthProvider from '@/components/providers/AuthProvider';
 
 interface ConditionalAuthProviderProps {
   children: React.ReactNode;
 }
 
 export function ConditionalAuthProvider({ children }: ConditionalAuthProviderProps) {
-  // Firebase/AuthProvider is no longer used. Always return children directly.
-  return <>{children}</>;
+  // Always wrap children in AuthProvider so useAuth() has context
+  return <AuthProvider>{children}</AuthProvider>;
 }
