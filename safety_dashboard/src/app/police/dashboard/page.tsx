@@ -1,9 +1,9 @@
 "use client";
 
-export const dynamic = 'force-dynamic';
+// export const dynamic = 'force-dynamic';
 
 import React, { useState, useEffect } from 'react';
-import { useAuth } from '@/context/AuthContextFirebase';
+// import { useAuth } from '@/context/AuthContextFirebase';
 import { useRouter } from 'next/navigation';
 import AppSidebar from '@/layout/AppSidebar';
 import AppHeader from '@/layout/AppHeader';
