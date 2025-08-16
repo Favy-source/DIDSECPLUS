@@ -46,9 +46,15 @@ async fn main() -> anyhow::Result<()> {
         .merge(routes::user_authentication_route::routes(auth_controller))
         .merge(routes::health::routes())
         .layer(cors);
+  // --- Render-friendly bind: read PORT and listen on 0.0.0.0 ---
+    let port: u16 = env::var("PORT").ok()
+        .and_then(|p| p.parse().ok())
+        .unwrap_or(3000);
 
-    let listener = tokio::net::TcpListener::bind("127.0.0.1:3000").await?;
-    println!("Server running on http://127.0.0.1:3000");
+    let addr = SocketAddr::from(([0, 0, 0, 0], port)); // 0.0.0.0:PORT
+    let listener = tokio::net::TcpListener::bind(addr).await?;
+    println!("Server running on http://{}", listener.local_addr()?);
+    // -------------------------------------------------------------
 
     axum::serve(listener, app).await?;
     Ok(())
