@@ -8,7 +8,7 @@ mod super_admin_authentication;
 mod routes;
 
 use axum::Router;
-use std::sync::Arc;
+use std::{env, net::SocketAddr, sync::Arc}; // <-- added env and SocketAddr
 use tower_http::cors::{CorsLayer, Any};
 use axum::http::header;
 use crate::config::config::Config;
@@ -36,17 +36,14 @@ async fn main() -> anyhow::Result<()> {
 
     let cors = CorsLayer::new()
         .allow_origin(Any)
-        .allow_headers([
-            header::AUTHORIZATION,
-            header::CONTENT_TYPE,
-            header::ACCEPT,
-        ]);
+        .allow_headers([header::AUTHORIZATION, header::CONTENT_TYPE, header::ACCEPT]);
 
     let app = Router::new()
         .merge(routes::user_authentication_route::routes(auth_controller))
         .merge(routes::health::routes())
         .layer(cors);
-  // --- Render-friendly bind: read PORT and listen on 0.0.0.0 ---
+
+    // --- Render-friendly bind: read PORT and listen on 0.0.0.0 ---
     let port: u16 = env::var("PORT").ok()
         .and_then(|p| p.parse().ok())
         .unwrap_or(3000);
