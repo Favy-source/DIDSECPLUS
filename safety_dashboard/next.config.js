@@ -35,7 +35,7 @@ const nextConfig = {
         source: '/api/:path*',
         // During local development this forwards to your backend on port 3000.
         // In production, update this to point at your hosted Rust API endpoint.
-        destination: 'http://localhost:3000/api/:path*',
+        destination: 'https://didsecplus-backend.onrender.com/:path*',
       },
     ];
   },
