@@ -7,10 +7,11 @@ mod admin_authentication;
 mod super_admin_authentication;
 mod routes;
 
-use axum::Router;
+use axum::{Router, routing::get};
 use std::{env, net::SocketAddr, sync::Arc};
+use tower_http::cors::{CorsLayer, Any};
 use axum::http::{header, Method};
-use tower_http::cors::{CorsLayer, Any}; // If you later use cookies, switch from Any to a fixed origin.
+
 use crate::config::config::Config;
 use crate::config::database::Database;
 use crate::user_authentication::controllers::user_authentication_controller::AuthController;
@@ -34,32 +35,20 @@ async fn main() -> anyhow::Result<()> {
     let user_repo = crate::user_authentication::data::repositories::user_repository::UserRepository::new(database.clone());
     ensure_super_admin(&user_repo).await?;
 
-    // --- CORS: allow preflight + common methods
     let cors = CorsLayer::new()
-        // If you later use cookie auth, replace Any with the exact frontend origin
-        // and also add `.allow_credentials(true)`.
-        // .allow_origin("https://didsecplus.vercel.app".parse::<http::HeaderValue>().unwrap())
         .allow_origin(Any)
-        .allow_methods([
-            Method::GET,
-            Method::POST,
-            Method::PUT,
-            Method::DELETE,
-            Method::PATCH,
-            Method::OPTIONS,
-        ])
-        .allow_headers([
-            header::AUTHORIZATION,
-            header::CONTENT_TYPE,
-            header::ACCEPT,
-        ]);
+        .allow_methods([Method::GET, Method::POST, Method::PUT, Method::PATCH, Method::DELETE, Method::OPTIONS])
+        .allow_headers([header::AUTHORIZATION, header::CONTENT_TYPE, header::ACCEPT]);
 
     let app = Router::new()
+        // health and index so / and /healthz return 200
+        .route("/healthz", get(|| async { "ok" }))
+        .route("/", get(|| async { "didsecplus-backend" }))
         .merge(routes::user_authentication_route::routes(auth_controller))
-        .merge(routes::health::routes())
+        .merge(routes::health::routes()) // keep yours too if you have it
         .layer(cors);
 
-    // --- Render-friendly bind: read PORT and listen on 0.0.0.0
+    // Bind to Render’s PORT
     let port: u16 = env::var("PORT").ok().and_then(|p| p.parse().ok()).unwrap_or(3000);
     let addr = SocketAddr::from(([0, 0, 0, 0], port));
     let listener = tokio::net::TcpListener::bind(addr).await?;
